@@ -1,5 +1,4 @@
 {
-  // TypeScript compiler settings
   "compilerOptions": {
     /* === core settings === */
     "target": "ESNext",
