@@ -7,3 +7,12 @@
   },
   "include": ["vite.config.ts"]
 }
+{
+  "compilerOptions": {
+    "composite": true,           // <- satisfies Vercel
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "types": ["node"]            // <- pulls in 'path', '__dirname', etc.
+  },
+  "include": ["vite.config.ts"]
+}
