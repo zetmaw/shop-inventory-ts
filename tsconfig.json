@@ -6,7 +6,7 @@
     "jsx": "react-jsx",
     "strict": true,
     /* === path alias + node types === */
-    "types": ["vite/client", "node"],
+	"types": ["vite/client"]
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
@@ -23,6 +23,16 @@
     "useDefineForClassFields": true,
     "lib": ["DOM", "DOM.Iterable", "ESNext"]
   },
+  {
+  "compilerOptions": {
+    // ...
+    "moduleResolution": "bundler",  // <-- modern for Vite 6
+    "allowImportingTsExtensions": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  }
+}
+
 
   "include": ["src"],
 }
