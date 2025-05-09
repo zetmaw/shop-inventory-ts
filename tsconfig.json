@@ -24,12 +24,12 @@
     "lib": ["DOM", "DOM.Iterable", "ESNext"]
   },
   {
+  {
   "compilerOptions": {
-    // ...
-    "moduleResolution": "bundler",  // <-- modern for Vite 6
+    "moduleResolution": "bundler",
     "allowImportingTsExtensions": false,
-    "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    ...
   }
 }
 
