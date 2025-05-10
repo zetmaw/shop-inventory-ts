@@ -1,38 +1,19 @@
 {
   "compilerOptions": {
-    /* === core settings === */
     "target": "ESNext",
     "module": "ESNext",
     "jsx": "react-jsx",
     "strict": true,
-    /* === path alias + node types === */
-	"types": ["vite/client"]
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
     },
-    /* === misc defaults === */
     "moduleResolution": "Node",
-    "esModuleInterop": false,
-    "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": false,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "useDefineForClassFields": true,
-    "lib": ["DOM", "DOM.Iterable", "ESNext"]
-  },
-  {
-  {
-  "compilerOptions": {
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": false,
+    "esModuleInterop": true,
     "skipLibCheck": true,
-    ...
-  }
+    "forceConsistentCasingInFileNames": true,
+    "types": ["vite/client", "node"]
+  },
+  "include": ["src"]
 }
 
-
-  "include": ["src"],
-}
