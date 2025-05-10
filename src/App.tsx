@@ -1,7 +1,12 @@
 import { useState } from 'react'
 
+type Item = {
+  name: string
+  category: string
+}
+
 function App() {
-  const [items, setItems] = useState([])
+  const [items, setItems] = useState<Item[]>([])
   const [name, setName] = useState('')
   const [category, setCategory] = useState('')
 
