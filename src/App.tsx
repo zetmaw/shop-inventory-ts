@@ -1,18 +1,18 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 
 interface Item {
   name: string
   category: string
 }
 
-function App() {
+const App: React.FC = () => {
   const [items, setItems] = useState<Item[]>([])
-  const [name, setName] = useState<string>('')
-  const [category, setCategory] = useState<string>('')
+  const [name, setName] = useState('')
+  const [category, setCategory] = useState('')
 
   const addItem = () => {
     const newItem: Item = { name, category }
-    setItems([...items, newItem])
+    setItems((prevItems) => [...prevItems, newItem])
     setName('')
     setCategory('')
   }
@@ -32,15 +32,11 @@ function App() {
           value={category}
           onChange={(e) => setCategory(e.target.value)}
         />
-        <button onClick={addItem} style={{ marginLeft: '0.5rem' }}>
-          Add
-        </button>
+        <button onClick={addItem} style={{ marginLeft: '0.5rem' }}>Add</button>
       </div>
       <ul>
         {items.map((item, index) => (
-          <li key={index}>
-            <strong>{item.category}</strong>: {item.name}
-          </li>
+          <li key={index}><strong>{item.category}</strong>: {item.name}</li>
         ))}
       </ul>
     </div>
