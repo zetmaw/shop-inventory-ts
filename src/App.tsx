@@ -1,12 +1,7 @@
 import { useState } from 'react'
 
-type Item = {
-  name: string
-  category: string
-}
-
 function App() {
-  const [items, setItems] = useState<Item[]>([])
+  const [items, setItems] = useState<Array<{ name: string; category: string }>>([])
   const [name, setName] = useState('')
   const [category, setCategory] = useState('')
 
