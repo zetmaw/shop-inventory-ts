@@ -1,21 +1,20 @@
-import React from 'react'
+import { useState } from 'react'
 
-type Item = {
+interface Item {
   name: string
   category: string
 }
 
 function App() {
-  const [items, setItems] = React.useState<Item[]>([])
-  const [name, setName] = React.useState('')
-  const [category, setCategory] = React.useState('')
+  const [items, setItems] = useState<Item[]>([])
+  const [name, setName] = useState<string>('')
+  const [category, setCategory] = useState<string>('')
 
   const addItem = () => {
-    if (name && category) {
-      setItems([...items, { name, category }])
-      setName('')
-      setCategory('')
-    }
+    const newItem: Item = { name, category }
+    setItems([...items, newItem])
+    setName('')
+    setCategory('')
   }
 
   return (
@@ -33,11 +32,15 @@ function App() {
           value={category}
           onChange={(e) => setCategory(e.target.value)}
         />
-        <button onClick={addItem} style={{ marginLeft: '0.5rem' }}>Add</button>
+        <button onClick={addItem} style={{ marginLeft: '0.5rem' }}>
+          Add
+        </button>
       </div>
       <ul>
         {items.map((item, index) => (
-          <li key={index}><strong>{item.category}:</strong> {item.name}</li>
+          <li key={index}>
+            <strong>{item.category}</strong>: {item.name}
+          </li>
         ))}
       </ul>
     </div>
