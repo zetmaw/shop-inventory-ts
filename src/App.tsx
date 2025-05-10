@@ -1,9 +1,14 @@
-import { useState } from 'react'
+import React from 'react'
+
+type Item = {
+  name: string
+  category: string
+}
 
 function App() {
-  const [items, setItems] = useState<Array<{ name: string; category: string }>>([])
-  const [name, setName] = useState('')
-  const [category, setCategory] = useState('')
+  const [items, setItems] = React.useState<Item[]>([])
+  const [name, setName] = React.useState('')
+  const [category, setCategory] = React.useState('')
 
   const addItem = () => {
     if (name && category) {
