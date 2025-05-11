@@ -1,0 +1,4 @@
+name,category,subcategory,brand,model,quantity,unit,location,condition,notes,photo_ref
+Hammer,Tools,Hand Tool,Stanley,STHT51304,3,pcs,Tool Rack,Good,Used for woodworking,images/hammer.jpg
+Drill,Tools,Power Tool,DeWalt,DCD996B,2,pcs,Shelf 3,Excellent,Cordless hammer drill,images/drill.jpg
+Wood Glue,Supplies,Adhesive,Titebond,III Ultimate,1,bottle,Cabinet 1,Full,Waterproof wood glue,images/glue.jpg
