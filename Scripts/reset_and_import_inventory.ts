@@ -1,10 +1,16 @@
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env.local' });
+
+console.log('🧪 SUPABASE_URL from env:', process.env.SUPABASE_URL);
 import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
 import csv from 'csv-parser';
+import 'dotenv/config';
 
-const supabaseUrl = 'https://YOUR_PROJECT_ID.supabase.co';
-const supabaseKey = 'YOUR_SERVICE_ROLE_KEY';
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 const csvFile = 'scripts/shop_inventory_final_merged.csv';
 const records: any[] = [];
