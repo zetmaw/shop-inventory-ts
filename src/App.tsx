@@ -91,7 +91,7 @@ const App: React.FC = () => {
 
         const records = lines.slice(1).map(line => {
           const values = line.split(',').map(v => v.trim());
-          const obj: any = {};
+          const obj: Record<string, string | number> = {};
           headers.forEach((key, i) => {
             obj[key] = key === 'quantity' ? parseInt(values[i]) || 0 : values[i] || '';
           });
@@ -109,7 +109,7 @@ const App: React.FC = () => {
         }
 
         alert('CSV data imported successfully!');
-        setItems((prev) => [...prev, ...records]);
+        setItems((prev) => [...prev, ...records as Item[]]);
       } catch (err: any) {
         console.error("🚨 Unexpected CSV import failure:", err);
         setErrorLog(`Unexpected error: ${err.message}`);
@@ -147,7 +147,7 @@ const App: React.FC = () => {
         }
       }
     }));
-    zip.generateAsync({ type: 'blob' }).then(zipFile => {
+    zip.generateAsync({ type: 'blob' }).then((zipFile: Blob) => {
       saveAs(zipFile, 'images.zip');
     });
   };
@@ -168,7 +168,7 @@ const App: React.FC = () => {
       <form style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
         {[{ label: 'Name', val: name, set: setName }, { label: 'Category', val: category, set: setCategory },
           { label: 'Subcategory', val: subcategory, set: setSubcategory }, { label: 'Brand', val: brand, set: setBrand },
-          { label: 'Model', val: model, set: setModel }, { label: 'Quantity', val: quantity.toString(), set: (v: any) => setQuantity(parseInt(v) || 0) },
+          { label: 'Model', val: model, set: setModel }, { label: 'Quantity', val: quantity.toString(), set: (v: string) => setQuantity(parseInt(v) || 0) },
           { label: 'Unit', val: unit, set: setUnit }, { label: 'Location', val: location, set: setLocation },
           { label: 'Condition', val: condition, set: setCondition }, { label: 'Notes', val: notes, set: setNotes }]
           .map(({ label, val, set }, i) => (
