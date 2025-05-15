@@ -31,7 +31,7 @@ const InventoryPage: React.FC = () => {
   const [model, setModel] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [unit, setUnit] = useState('');
-  const [location, setLocation] = useState('');
+  const [locationText, setLocationText] = useState('');
   const [condition, setCondition] = useState('');
   const [notes, setNotes] = useState('');
   const [photoRef, setPhotoRef] = useState('');
@@ -64,8 +64,17 @@ const InventoryPage: React.FC = () => {
       uploadedPath = await uploadImage(file);
     }
     const newItem: Item = {
-      name, category, subcategory, brand, model, quantity, unit, location,
-      condition, notes, photo_ref: uploadedPath
+      name,
+      category,
+      subcategory,
+      brand,
+      model,
+      quantity,
+      unit,
+      location: locationText,
+      condition,
+      notes,
+      photo_ref: uploadedPath
     };
     const { error } = await supabase.from('items').insert([newItem]);
     if (error) {
@@ -79,8 +88,18 @@ const InventoryPage: React.FC = () => {
   };
 
   const resetForm = () => {
-    setName(''); setCategory(''); setSubcategory(''); setBrand(''); setModel('');
-    setQuantity(1); setUnit(''); setLocation(''); setCondition(''); setNotes(''); setPhotoRef(''); setFile(null);
+    setName('');
+    setCategory('');
+    setSubcategory('');
+    setBrand('');
+    setModel('');
+    setQuantity(1);
+    setUnit('');
+    setLocationText('');
+    setCondition('');
+    setNotes('');
+    setPhotoRef('');
+    setFile(null);
   };
 
   return (
@@ -90,7 +109,8 @@ const InventoryPage: React.FC = () => {
         <button
           onClick={async () => {
             await supabase.auth.signOut();
-			window.location.href = '/login';          }}
+            window.location.href = '/login';
+          }}
           className="text-sm text-red-600 border border-red-600 rounded px-3 py-1 hover:bg-red-600 hover:text-white"
         >
           Log out
@@ -108,11 +128,16 @@ const InventoryPage: React.FC = () => {
 
       {showForm && (
         <form className="bg-white p-4 rounded shadow mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[{ label: 'Name', val: name, set: setName }, { label: 'Category', val: category, set: setCategory },
-            { label: 'Subcategory', val: subcategory, set: setSubcategory }, { label: 'Brand', val: brand, set: setBrand },
-            { label: 'Model', val: model, set: setModel }, { label: 'Quantity', val: quantity.toString(), set: (v: any) => setQuantity(parseInt(v) || 0) },
-            { label: 'Unit', val: unit, set: setUnit }, { label: 'Location', val: location, set: setLocation },
-            { label: 'Condition', val: condition, set: setCondition }, { label: 'Notes', val: notes, set: setNotes }]
+          {[{ label: 'Name', val: name, set: setName },
+            { label: 'Category', val: category, set: setCategory },
+            { label: 'Subcategory', val: subcategory, set: setSubcategory },
+            { label: 'Brand', val: brand, set: setBrand },
+            { label: 'Model', val: model, set: setModel },
+            { label: 'Quantity', val: quantity.toString(), set: (v: any) => setQuantity(parseInt(v) || 0) },
+            { label: 'Unit', val: unit, set: setUnit },
+            { label: 'Location', val: locationText, set: setLocationText },
+            { label: 'Condition', val: condition, set: setCondition },
+            { label: 'Notes', val: notes, set: setNotes }]
             .map(({ label, val, set }, i) => (
               <label key={i} className="block text-sm">
                 {label}
