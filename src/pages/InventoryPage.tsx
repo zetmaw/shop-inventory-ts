@@ -111,7 +111,7 @@ const InventoryPage: React.FC = () => {
         <form className="bg-white p-4 rounded shadow mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
           {[{ label: 'Name', val: name, set: setName }, { label: 'Category', val: category, set: setCategory },
             { label: 'Subcategory', val: subcategory, set: setSubcategory }, { label: 'Brand', val: brand, set: setBrand },
-            { label: 'Model', val: model, set: setModel }, { label: 'Quantity', val: quantity.toString(), set: (v: any) => setQuantity(parseInt(v) || 0) },
+            { label: 'Model', val: model, set: setModel }, { label: 'Quantity', val: quantity.toString(), set: (v: string) => setQuantity(parseInt(v) || 0) },
             { label: 'Unit', val: unit, set: setUnit }, { label: 'Location', val: itemLocation, set: setItemLocation },
             { label: 'Condition', val: condition, set: setCondition }, { label: 'Notes', val: notes, set: setNotes }]
             .map(({ label, val, set }, i) => (
