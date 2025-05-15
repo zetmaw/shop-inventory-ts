@@ -90,8 +90,7 @@ const InventoryPage: React.FC = () => {
         <button
           onClick={async () => {
             await supabase.auth.signOut();
-            location.href = '/login';
-          }}
+			window.location.href = '/login';          }}
           className="text-sm text-red-600 border border-red-600 rounded px-3 py-1 hover:bg-red-600 hover:text-white"
         >
           Log out
