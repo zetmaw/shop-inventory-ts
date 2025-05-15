@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { supabase } from './lib/supabase';
+import { supabase } from '../lib/supabase';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 
@@ -21,7 +21,7 @@ interface Item {
 const getPublicUrl = (path: string) =>
   `https://orrfckfzavkodlapmcml.supabase.co/storage/v1/object/public/${path}`;
 
-const App: React.FC = () => {
+const InventoryPage: React.FC = () => {
   const [items, setItems] = useState<Item[]>([]);
   const [currentId, setCurrentId] = useState<number | null>(null);
   const [name, setName] = useState('');
@@ -159,7 +159,18 @@ const App: React.FC = () => {
 
   return (
     <div style={{ padding: '2rem', maxWidth: '900px', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
-      <h1 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>🛠️ Workshop Inventory</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">🧰 Workshop Inventory</h1>
+        <button
+          onClick={async () => {
+            await supabase.auth.signOut();
+            window.location.href = '/login';
+          }}
+          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+        >
+          Log Out
+        </button>
+      </div>
 
       {errorLog && (
         <div style={{ color: 'red', marginBottom: '1rem', fontWeight: 'bold' }}>{errorLog}</div>
@@ -201,4 +212,4 @@ const App: React.FC = () => {
   );
 };
 
-export default App;
+export default InventoryPage;

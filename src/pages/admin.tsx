@@ -1,54 +1,40 @@
-// src/pages/admin.tsx
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
-import CsvUploader from '../components/CsvUploader';
+import { supabase } from '../lib/supabase';
 
 export default function AdminPage() {
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) navigate('/login');
-    };
-    checkAuth();
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) {
+        navigate('/login');
+      } else {
+        setUser(data.session.user);
+        setLoading(false);
+      }
+    });
   }, [navigate]);
 
-  const handleImport = async () => {
-    setLoading(true);
-    setMessage(null);
-    try {
-      const res = await fetch(import.meta.env.VITE_IMPORT_ENDPOINT!, { method: 'POST' });
-      const data = await res.json();
-      if (res.ok) {
-        setMessage(`✅ Imported ${data.imported} items successfully.`);
-      } else {
-        setMessage(`❌ Import failed: ${data.error}`);
-      }
-    } catch (err: any) {
-      setMessage(`❌ Unexpected error: ${err.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (loading) {
+    return <div className="p-4 text-gray-600">Loading...</div>;
+  }
 
   return (
     <div className="max-w-xl mx-auto py-12 px-4">
-      <h1 className="text-2xl font-bold mb-6">Admin Inventory Controls</h1>
-      <CsvUploader />
+      <h1 className="text-2xl font-bold mb-6">Admin Panel</h1>
+      <p className="mb-4">Welcome, <strong>{user.email}</strong></p>
       <button
-        onClick={handleImport}
-        disabled={loading}
-        className="mt-6 bg-black text-white px-4 py-2 rounded"
+        className="bg-red-500 text-white px-4 py-2 rounded"
+        onClick={async () => {
+          await supabase.auth.signOut();
+          navigate('/login');
+        }}
       >
-        {loading ? 'Importing...' : 'Import Inventory from CSV'}
+        Log out
       </button>
-      {message && <p className="mt-4 text-sm text-gray-700">{message}</p>}
     </div>
   );
 }

@@ -2,18 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-    />
-    <meta
-      name="description"
-      content="Manage every tool and part in Willie’s workshop"
-    />
-    <link rel="icon" href="https://fav.farm/🛠️" type="image/png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Workshop Inventory</title>
 
-    <!-- Tailwind CSS (via CDN) -->
+    <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <script>
       tailwind.config = {
@@ -31,19 +23,8 @@
       };
     </script>
   </head>
-
   <body class="min-h-screen bg-gray-100 text-gray-800 antialiased">
-    <!-- Floating gear icon -->
-    <div class="p-4 md:absolute md:top-4 md:left-4 text-3xl md:text-4xl">
-      🛠️
-    </div>
-
-    <!-- Main content wrapper -->
-    <main class="max-w-5xl mx-auto p-4 pt-16 md:pt-8">
-      <!-- React mounts here -->
-      <div id="root"></div>
-    </main>
-
+    <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
