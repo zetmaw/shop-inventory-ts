@@ -42,8 +42,11 @@ const InventoryPage: React.FC = () => {
   useEffect(() => {
     const fetchItems = async () => {
       const { data, error } = await supabase.from('items').select('*');
-      if (error) console.error('Fetch error:', error);
-      else setItems(data as Item[]);
+      if (error) {
+        console.error('Fetch error:', error);
+      } else {
+        setItems(data as Item[]);
+      }
     };
     fetchItems();
   }, []);
@@ -63,10 +66,21 @@ const InventoryPage: React.FC = () => {
     if (file) {
       uploadedPath = await uploadImage(file);
     }
+
     const newItem: Item = {
-      name, category, subcategory, brand, model, quantity, unit, location: itemLocation,
-      condition, notes, photo_ref: uploadedPath
+      name,
+      category,
+      subcategory,
+      brand,
+      model,
+      quantity,
+      unit,
+      location: itemLocation,
+      condition,
+      notes,
+      photo_ref: uploadedPath,
     };
+
     const { error } = await supabase.from('items').insert([newItem]);
     if (error) {
       console.error('Insert error:', error);
@@ -79,8 +93,18 @@ const InventoryPage: React.FC = () => {
   };
 
   const resetForm = () => {
-    setName(''); setCategory(''); setSubcategory(''); setBrand(''); setModel('');
-    setQuantity(1); setUnit(''); setItemLocation(''); setCondition(''); setNotes(''); setPhotoRef(''); setFile(null);
+    setName('');
+    setCategory('');
+    setSubcategory('');
+    setBrand('');
+    setModel('');
+    setQuantity(1);
+    setUnit('');
+    setItemLocation('');
+    setCondition('');
+    setNotes('');
+    setPhotoRef('');
+    setFile(null);
   };
 
   return (
@@ -90,7 +114,7 @@ const InventoryPage: React.FC = () => {
         <button
           onClick={async () => {
             await supabase.auth.signOut();
-            window.location.href = '/login';
+            window.location.assign('/login');
           }}
           className="text-sm text-red-600 border border-red-600 rounded px-3 py-1 hover:bg-red-600 hover:text-white"
         >
@@ -109,25 +133,38 @@ const InventoryPage: React.FC = () => {
 
       {showForm && (
         <form className="bg-white p-4 rounded shadow mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[{ label: 'Name', val: name, set: setName }, { label: 'Category', val: category, set: setCategory },
-            { label: 'Subcategory', val: subcategory, set: setSubcategory }, { label: 'Brand', val: brand, set: setBrand },
-            { label: 'Model', val: model, set: setModel }, { label: 'Quantity', val: quantity.toString(), set: (v: string) => setQuantity(parseInt(v) || 0) },
-            { label: 'Unit', val: unit, set: setUnit }, { label: 'Location', val: itemLocation, set: setItemLocation },
-            { label: 'Condition', val: condition, set: setCondition }, { label: 'Notes', val: notes, set: setNotes }]
-            .map(({ label, val, set }, i) => (
-              <label key={i} className="block text-sm">
-                {label}
-                <input
-                  value={val}
-                  onChange={e => set(e.target.value)}
-                  className="w-full mt-1 p-2 border border-gray-300 rounded"
-                />
-              </label>
-            ))}
+          {[{ label: 'Name', val: name, set: setName },
+            { label: 'Category', val: category, set: setCategory },
+            { label: 'Subcategory', val: subcategory, set: setSubcategory },
+            { label: 'Brand', val: brand, set: setBrand },
+            { label: 'Model', val: model, set: setModel },
+            {
+              label: 'Quantity',
+              val: quantity.toString(),
+              set: (v: string) => setQuantity(parseInt(v) || 0),
+            },
+            { label: 'Unit', val: unit, set: setUnit },
+            { label: 'Location', val: itemLocation, set: setItemLocation },
+            { label: 'Condition', val: condition, set: setCondition },
+            { label: 'Notes', val: notes, set: setNotes },
+          ].map(({ label, val, set }, i) => (
+            <label key={i} className="block text-sm">
+              {label}
+              <input
+                value={val}
+                onChange={(e) => set(e.target.value)}
+                className="w-full mt-1 p-2 border border-gray-300 rounded"
+              />
+            </label>
+          ))}
 
           <label className="block text-sm col-span-full">
             Upload Photo:
-            <input type="file" ref={fileInputRef} onChange={e => setFile(e.target.files?.[0] || null)} />
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+            />
           </label>
 
           <div className="col-span-full">
@@ -144,9 +181,14 @@ const InventoryPage: React.FC = () => {
 
       <ul className="space-y-2">
         {items.map((item, index) => (
-          <li key={index} className="p-3 border border-gray-200 rounded bg-white">
+          <li
+            key={index}
+            className="p-3 border border-gray-200 rounded bg-white"
+          >
             <div className="font-bold">{item.name}</div>
-            <div className="text-sm text-gray-600">{item.category} — {item.location}</div>
+            <div className="text-sm text-gray-600">
+              {item.category} — {item.location}
+            </div>
             {item.photo_ref && (
               <img
                 src={getPublicUrl(item.photo_ref)}
