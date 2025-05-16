@@ -1,0 +1,28 @@
+# Node
+node_modules/
+pnpm-lock.yaml
+
+# Vite build output
+dist/
+
+# Local env variables
+.env*
+!.env.example
+
+# IDE/editor noise
+.vscode/
+.idea/
+*.sw?
+
+# macOS / system junk
+.DS_Store
+Thumbs.db
+
+# TypeScript cache and build outputs
+*.tsbuildinfo
+
+# Prevent accidental commits of JS alongside TS
+**/*.js
+!vite.config.js
+!postcss.config.js
+!tailwind.config.js
