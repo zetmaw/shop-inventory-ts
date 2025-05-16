@@ -38,7 +38,6 @@ const InventoryPage: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [errorLog, setErrorLog] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const csvInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -102,10 +101,10 @@ const InventoryPage: React.FC = () => {
       try {
         const text = event.target?.result as string;
         const lines = text.trim().split('\n');
-        const headers = lines[0].split(',').map((h) => h.trim().toLowerCase());
+        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
 
-        const records = lines.slice(1).map((line) => {
-          const values = line.split(',').map((v) => v.trim());
+        const records = lines.slice(1).map(line => {
+          const values = line.split(',').map(v => v.trim());
           const obj: Record<string, string | number> = {};
           headers.forEach((key, i) => {
             obj[key] = key === 'quantity' ? parseInt(values[i]) || 0 : values[i] || '';
@@ -113,67 +112,30 @@ const InventoryPage: React.FC = () => {
           return obj;
         });
 
-        const { error } = await supabase.from('items').insert(records);
-        if (error) {
-          console.error('Supabase insert error:', error);
-          setErrorLog(`Supabase insert error: ${error.message}`);
-          alert('Failed to import CSV');
-          return;
-        }
+        const typedRecords: Item[] = records.map((record) => ({
+          id: undefined,
+          name: record['name'] as string,
+          category: record['category'] as string,
+          subcategory: record['subcategory'] as string,
+          brand: record['brand'] as string,
+          model: record['model'] as string,
+          quantity: record['quantity'] as number,
+          unit: record['unit'] as string,
+          location: record['location'] as string,
+          condition: record['condition'] as string,
+          notes: record['notes'] as string,
+          photo_ref: record['photo_ref'] as string,
+        }));
 
-        alert('CSV data imported successfully!');
-        setItems((prev) => [...prev, ...(records as Item[])]);
+        setItems((prev) => [...prev, ...typedRecords]);
+
       } catch (err: any) {
-        console.error('Unexpected CSV import failure:', err);
-        setErrorLog(`Unexpected error: ${err.message}`);
+        console.error('CSV import error:', err);
+        setErrorLog(`CSV import error: ${err.message}`);
       }
     };
 
     reader.readAsText(file);
-    e.target.value = '';
-  };
-
-  const exportCSVAndImages = async (items: Item[]) => {
-    const headers = ['name', 'category', 'subcategory', 'brand', 'model', 'quantity', 'unit', 'location', 'condition', 'notes', 'photo_url'];
-    const rows = await Promise.all(
-      items.map(async (item) => {
-        const photoUrl = item.photo_ref ? getPublicUrl(item.photo_ref) : '';
-        return [
-          item.name,
-          item.category,
-          item.subcategory,
-          item.brand,
-          item.model,
-          item.quantity.toString(),
-          item.unit,
-          item.location,
-          item.condition,
-          item.notes,
-          photoUrl,
-        ];
-      })
-    );
-    const csvContent = [headers, ...rows].map((r) => r.join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    saveAs(blob, 'inventory.csv');
-    const zip = new JSZip();
-    await Promise.all(
-      items.map(async (item, i) => {
-        if (item.photo_ref) {
-          const url = getPublicUrl(item.photo_ref);
-          try {
-            const res = await fetch(url);
-            const blob = await res.blob();
-            zip.file(`image_${i + 1}.${item.photo_ref.split('.').pop()}`, blob);
-          } catch (err) {
-            console.error(`Failed to download ${url}:`, err);
-          }
-        }
-      })
-    );
-    zip.generateAsync({ type: 'blob' }).then((zipBlob: Blob) => {
-      saveAs(zipBlob, 'images.zip');
-    });
   };
 
   const resetForm = () => {
@@ -206,34 +168,13 @@ const InventoryPage: React.FC = () => {
         </button>
       </div>
 
-      <div className="flex flex-wrap gap-4 mb-6">
+      <div className="mb-4">
         <button
           onClick={() => setShowForm(!showForm)}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
           {showForm ? 'Cancel' : '➕ Add New Item'}
         </button>
-        <button
-          onClick={() => exportCSVAndImages(items)}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-        >
-          📤 Export CSV
-        </button>
-        <>
-          <input
-            ref={csvInputRef}
-            type="file"
-            accept=".csv"
-            style={{ display: 'none' }}
-            onChange={importCSV}
-          />
-          <button
-            onClick={() => csvInputRef.current?.click()}
-            className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
-          >
-            📥 Import CSV
-          </button>
-        </>
       </div>
 
       {showForm && (
@@ -243,11 +184,7 @@ const InventoryPage: React.FC = () => {
             { label: 'Subcategory', val: subcategory, set: setSubcategory },
             { label: 'Brand', val: brand, set: setBrand },
             { label: 'Model', val: model, set: setModel },
-            {
-              label: 'Quantity',
-              val: quantity.toString(),
-              set: (v: string) => setQuantity(parseInt(v) || 0),
-            },
+            { label: 'Quantity', val: quantity.toString(), set: (v: string) => setQuantity(parseInt(v) || 0) },
             { label: 'Unit', val: unit, set: setUnit },
             { label: 'Location', val: itemLocation, set: setItemLocation },
             { label: 'Condition', val: condition, set: setCondition },
