@@ -38,6 +38,7 @@ const InventoryPage: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [errorLog, setErrorLog] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const csvInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -92,6 +93,89 @@ const InventoryPage: React.FC = () => {
     }
   };
 
+  const importCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const text = event.target?.result as string;
+        const lines = text.trim().split('\n');
+        const headers = lines[0].split(',').map((h) => h.trim().toLowerCase());
+
+        const records = lines.slice(1).map((line) => {
+          const values = line.split(',').map((v) => v.trim());
+          const obj: Record<string, string | number> = {};
+          headers.forEach((key, i) => {
+            obj[key] = key === 'quantity' ? parseInt(values[i]) || 0 : values[i] || '';
+          });
+          return obj;
+        });
+
+        const { error } = await supabase.from('items').insert(records);
+        if (error) {
+          console.error('Supabase insert error:', error);
+          setErrorLog(`Supabase insert error: ${error.message}`);
+          alert('Failed to import CSV');
+          return;
+        }
+
+        alert('CSV data imported successfully!');
+        setItems((prev) => [...prev, ...(records as Item[])]);
+      } catch (err: any) {
+        console.error('Unexpected CSV import failure:', err);
+        setErrorLog(`Unexpected error: ${err.message}`);
+      }
+    };
+
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const exportCSVAndImages = async (items: Item[]) => {
+    const headers = ['name', 'category', 'subcategory', 'brand', 'model', 'quantity', 'unit', 'location', 'condition', 'notes', 'photo_url'];
+    const rows = await Promise.all(
+      items.map(async (item) => {
+        const photoUrl = item.photo_ref ? getPublicUrl(item.photo_ref) : '';
+        return [
+          item.name,
+          item.category,
+          item.subcategory,
+          item.brand,
+          item.model,
+          item.quantity.toString(),
+          item.unit,
+          item.location,
+          item.condition,
+          item.notes,
+          photoUrl,
+        ];
+      })
+    );
+    const csvContent = [headers, ...rows].map((r) => r.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    saveAs(blob, 'inventory.csv');
+    const zip = new JSZip();
+    await Promise.all(
+      items.map(async (item, i) => {
+        if (item.photo_ref) {
+          const url = getPublicUrl(item.photo_ref);
+          try {
+            const res = await fetch(url);
+            const blob = await res.blob();
+            zip.file(`image_${i + 1}.${item.photo_ref.split('.').pop()}`, blob);
+          } catch (err) {
+            console.error(`Failed to download ${url}:`, err);
+          }
+        }
+      })
+    );
+    zip.generateAsync({ type: 'blob' }).then((zipBlob: Blob) => {
+      saveAs(zipBlob, 'images.zip');
+    });
+  };
+
   const resetForm = () => {
     setName('');
     setCategory('');
@@ -114,7 +198,7 @@ const InventoryPage: React.FC = () => {
         <button
           onClick={async () => {
             await supabase.auth.signOut();
-            window.location.assign('/login'); // ✅ Corrected here
+            window.location.assign('/login');
           }}
           className="text-sm text-red-600 border border-red-600 rounded px-3 py-1 hover:bg-red-600 hover:text-white"
         >
@@ -122,13 +206,34 @@ const InventoryPage: React.FC = () => {
         </button>
       </div>
 
-      <div className="mb-4">
+      <div className="flex flex-wrap gap-4 mb-6">
         <button
           onClick={() => setShowForm(!showForm)}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
           {showForm ? 'Cancel' : '➕ Add New Item'}
         </button>
+        <button
+          onClick={() => exportCSVAndImages(items)}
+          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+        >
+          📤 Export CSV
+        </button>
+        <>
+          <input
+            ref={csvInputRef}
+            type="file"
+            accept=".csv"
+            style={{ display: 'none' }}
+            onChange={importCSV}
+          />
+          <button
+            onClick={() => csvInputRef.current?.click()}
+            className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
+          >
+            📥 Import CSV
+          </button>
+        </>
       </div>
 
       {showForm && (
