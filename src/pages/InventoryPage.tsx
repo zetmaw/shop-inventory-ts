@@ -24,6 +24,7 @@ const getPublicUrl = (path: string) =>
 const InventoryPage: React.FC = () => {
   const [items, setItems] = useState<Item[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [name, setName] = useState('');
   const [category, setCategory] = useState('');
   const [subcategory, setSubcategory] = useState('');
@@ -61,13 +62,13 @@ const InventoryPage: React.FC = () => {
     return data.path;
   };
 
-  const addItem = async () => {
+  const handleSave = async () => {
     let uploadedPath = photoRef;
     if (file) {
       uploadedPath = await uploadImage(file);
     }
 
-    const newItem: Item = {
+    const updatedItem: Item = {
       name,
       category,
       subcategory,
@@ -81,64 +82,29 @@ const InventoryPage: React.FC = () => {
       photo_ref: uploadedPath,
     };
 
-    const { error } = await supabase.from('items').insert([newItem]);
-    if (error) {
-      console.error('Insert error:', error);
-      setErrorLog(`Insert error: ${error.message}`);
+    let error;
+    if (selectedItem?.id) {
+      // Update
+      ({ error } = await supabase.from('items').update(updatedItem).eq('id', selectedItem.id));
     } else {
-      setItems((prev) => [...prev, newItem]);
-      resetForm();
+      // Insert
+      ({ error } = await supabase.from('items').insert([updatedItem]));
+    }
+
+    if (error) {
+      console.error('Save error:', error);
+      setErrorLog(`Save error: ${error.message}`);
+    } else {
       setShowForm(false);
+      setSelectedItem(null);
+      resetForm();
+      const { data } = await supabase.from('items').select('*');
+      setItems(data as Item[]);
     }
   };
 
-  const importCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      try {
-        const text = event.target?.result as string;
-        const lines = text.trim().split('\n');
-        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-
-        const records = lines.slice(1).map(line => {
-          const values = line.split(',').map(v => v.trim());
-          const obj: Record<string, string | number> = {};
-          headers.forEach((key, i) => {
-            obj[key] = key === 'quantity' ? parseInt(values[i]) || 0 : values[i] || '';
-          });
-          return obj;
-        });
-
-        const typedRecords: Item[] = records.map((record) => ({
-          id: undefined,
-          name: record['name'] as string,
-          category: record['category'] as string,
-          subcategory: record['subcategory'] as string,
-          brand: record['brand'] as string,
-          model: record['model'] as string,
-          quantity: record['quantity'] as number,
-          unit: record['unit'] as string,
-          location: record['location'] as string,
-          condition: record['condition'] as string,
-          notes: record['notes'] as string,
-          photo_ref: record['photo_ref'] as string,
-        }));
-
-        setItems((prev) => [...prev, ...typedRecords]);
-
-      } catch (err: any) {
-        console.error('CSV import error:', err);
-        setErrorLog(`CSV import error: ${err.message}`);
-      }
-    };
-
-    reader.readAsText(file);
-  };
-
   const resetForm = () => {
+    setSelectedItem(null);
     setName('');
     setCategory('');
     setSubcategory('');
@@ -151,6 +117,22 @@ const InventoryPage: React.FC = () => {
     setNotes('');
     setPhotoRef('');
     setFile(null);
+  };
+
+  const handleItemClick = (item: Item) => {
+    setSelectedItem(item);
+    setName(item.name);
+    setCategory(item.category);
+    setSubcategory(item.subcategory);
+    setBrand(item.brand);
+    setModel(item.model);
+    setQuantity(item.quantity);
+    setUnit(item.unit);
+    setItemLocation(item.location);
+    setCondition(item.condition);
+    setNotes(item.notes);
+    setPhotoRef(item.photo_ref);
+    setShowForm(true);
   };
 
   return (
@@ -170,10 +152,13 @@ const InventoryPage: React.FC = () => {
 
       <div className="mb-4">
         <button
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => {
+            resetForm();
+            setShowForm(true);
+          }}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
-          {showForm ? 'Cancel' : '➕ Add New Item'}
+          ➕ Add New Item
         </button>
       </div>
 
@@ -184,7 +169,11 @@ const InventoryPage: React.FC = () => {
             { label: 'Subcategory', val: subcategory, set: setSubcategory },
             { label: 'Brand', val: brand, set: setBrand },
             { label: 'Model', val: model, set: setModel },
-            { label: 'Quantity', val: quantity.toString(), set: (v: string) => setQuantity(parseInt(v) || 0) },
+            {
+              label: 'Quantity',
+              val: quantity.toString(),
+              set: (v: string) => setQuantity(parseInt(v) || 0),
+            },
             { label: 'Unit', val: unit, set: setUnit },
             { label: 'Location', val: itemLocation, set: setItemLocation },
             { label: 'Condition', val: condition, set: setCondition },
@@ -212,10 +201,10 @@ const InventoryPage: React.FC = () => {
           <div className="col-span-full">
             <button
               type="button"
-              onClick={addItem}
+              onClick={handleSave}
               className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
             >
-              Save Item
+              {selectedItem?.id ? 'Update Item' : 'Save Item'}
             </button>
           </div>
         </form>
@@ -225,7 +214,8 @@ const InventoryPage: React.FC = () => {
         {items.map((item, index) => (
           <li
             key={index}
-            className="p-3 border border-gray-200 rounded bg-white"
+            className="p-3 border border-gray-200 rounded bg-white cursor-pointer hover:bg-gray-100"
+            onClick={() => handleItemClick(item)}
           >
             <div className="font-bold">{item.name}</div>
             <div className="text-sm text-gray-600">
