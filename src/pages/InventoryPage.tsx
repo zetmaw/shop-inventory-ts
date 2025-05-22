@@ -1,238 +1,166 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 
-interface Item {
-  id?: number;
-  name: string;
-  category: string;
-  subcategory: string;
-  brand: string;
-  model: string;
-  quantity: number;
-  unit: string;
-  location: string;
-  condition: string;
-  notes: string;
-  photo_ref: string;
-}
-
-const getPublicUrl = (path: string) =>
-  `https://orrfckfzavkodlapmcml.supabase.co/storage/v1/object/public/${path}`;
-
-const InventoryPage: React.FC = () => {
-  const [items, setItems] = useState<Item[]>([]);
-  const [showForm, setShowForm] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
-  const [name, setName] = useState('');
-  const [category, setCategory] = useState('');
-  const [subcategory, setSubcategory] = useState('');
-  const [brand, setBrand] = useState('');
-  const [model, setModel] = useState('');
-  const [quantity, setQuantity] = useState(1);
-  const [unit, setUnit] = useState('');
-  const [itemLocation, setItemLocation] = useState('');
-  const [condition, setCondition] = useState('');
-  const [notes, setNotes] = useState('');
-  const [photoRef, setPhotoRef] = useState('');
-  const [file, setFile] = useState<File | null>(null);
-  const [errorLog, setErrorLog] = useState<string>('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
+export default function InventoryPage() {
+  const [items, setItems] = useState<any[]>([]);
+  const [selectedItem, setSelectedItem] = useState<any | null>(null);
+  const [formData, setFormData] = useState<any>({});
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const dropRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const fetchItems = async () => {
-      const { data, error } = await supabase.from('items').select('*');
-      if (error) {
-        console.error('Fetch error:', error);
-      } else {
-        setItems(data as Item[]);
-      }
-    };
-    fetchItems();
+    loadInventory();
   }, []);
 
-  const uploadImage = async (file: File): Promise<string> => {
-    const fileName = `${Date.now()}_${file.name}`;
-    const { data, error } = await supabase.storage.from('images').upload(fileName, file);
-    if (error) {
-      console.error('Image upload error:', error);
-      return '';
-    }
-    return data.path;
-  };
+  async function loadInventory() {
+    const { data, error } = await supabase.from('items').select('*').order('name');
+    if (error) console.error('Failed to load inventory:', error);
+    else setItems(data || []);
+  }
 
-  const handleSave = async () => {
-    let uploadedPath = photoRef;
-    if (file) {
-      uploadedPath = await uploadImage(file);
-    }
-
-    const updatedItem: Item = {
-      name,
-      category,
-      subcategory,
-      brand,
-      model,
-      quantity,
-      unit,
-      location: itemLocation,
-      condition,
-      notes,
-      photo_ref: uploadedPath,
-    };
-
-    let error;
-    if (selectedItem?.id) {
-      // Update
-      ({ error } = await supabase.from('items').update(updatedItem).eq('id', selectedItem.id));
-    } else {
-      // Insert
-      ({ error } = await supabase.from('items').insert([updatedItem]));
-    }
-
-    if (error) {
-      console.error('Save error:', error);
-      setErrorLog(`Save error: ${error.message}`);
-    } else {
-      setShowForm(false);
-      setSelectedItem(null);
-      resetForm();
-      const { data } = await supabase.from('items').select('*');
-      setItems(data as Item[]);
-    }
-  };
-
-  const resetForm = () => {
-    setSelectedItem(null);
-    setName('');
-    setCategory('');
-    setSubcategory('');
-    setBrand('');
-    setModel('');
-    setQuantity(1);
-    setUnit('');
-    setItemLocation('');
-    setCondition('');
-    setNotes('');
-    setPhotoRef('');
-    setFile(null);
-  };
-
-  const handleItemClick = (item: Item) => {
+  function handleSelect(item: any) {
     setSelectedItem(item);
-    setName(item.name);
-    setCategory(item.category);
-    setSubcategory(item.subcategory);
-    setBrand(item.brand);
-    setModel(item.model);
-    setQuantity(item.quantity);
-    setUnit(item.unit);
-    setItemLocation(item.location);
-    setCondition(item.condition);
-    setNotes(item.notes);
-    setPhotoRef(item.photo_ref);
-    setShowForm(true);
-  };
+    setFormData(item);
+  }
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
+    const { name, value } = e.target;
+    setFormData((prev: any) => ({ ...prev, [name]: value }));
+  }
+
+  async function handleUpdate() {
+    if (!selectedItem) return;
+    const { error } = await supabase.from('items').update(formData).eq('id', selectedItem.id);
+    if (error) console.error('Failed to update item:', error);
+    else await loadInventory();
+  }
+
+  async function handleExport() {
+    const csvContent = [
+      [
+        'name','category','subcategory','brand','model','quantity','unit','location','condition','notes','photo_ref'
+      ],
+      ...items.map(item => [
+        item.name, item.category, item.subcategory, item.brand, item.model,
+        item.quantity, item.unit, item.location, item.condition, item.notes, item.photo_ref
+      ])
+    ].map(e => e.join(",")).join("\n");
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    saveAs(blob, 'inventory_export.csv');
+  }
+
+  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const text = await file.text();
+    const lines = text.trim().split("\n");
+    const headers = lines[0].split(',');
+    const records = lines.slice(1).map(line => {
+      const values = line.split(',');
+      const obj: any = {};
+      headers.forEach((h, i) => (obj[h.trim()] = values[i]?.trim() || ''));
+      return obj;
+    });
+    for (const record of records) {
+      await supabase.from('items').insert(record);
+    }
+    await loadInventory();
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+
+  async function handleAddNew() {
+    const { data, error } = await supabase.from('items').insert({ name: 'New Item' }).select().single();
+    if (error) {
+      console.error('Error adding new item:', error);
+      return;
+    }
+    await loadInventory();
+    if (data) {
+      setSelectedItem(data);
+      setFormData(data);
+    }
+  }
+
+  async function handlePhotoUpload(files: FileList) {
+    if (!selectedItem) return;
+    for (const file of Array.from(files)) {
+      const filePath = `photos/${selectedItem.id}/${Date.now()}_${file.name}`;
+      const { error: uploadError } = await supabase.storage.from('inventory-photos').upload(filePath, file, {
+        upsert: true
+      });
+      if (uploadError) {
+        console.error('Upload failed:', uploadError);
+        continue;
+      }
+    }
+    await loadInventory();
+  }
+
+  function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handlePhotoUpload(e.dataTransfer.files);
+      e.dataTransfer.clearData();
+    }
+  }
 
   return (
-    <div className="max-w-5xl mx-auto p-4 font-sans">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">🔧 Workshop Inventory</h1>
-        <button
-          onClick={async () => {
-            await supabase.auth.signOut();
-            window.location.assign('/login');
-          }}
-          className="text-sm text-red-600 border border-red-600 rounded px-3 py-1 hover:bg-red-600 hover:text-white"
-        >
-          Log out
-        </button>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">🧰 Workshop Inventory</h1>
+
+      {/* Action Buttons */}
+      <div className="flex gap-4 mb-4 items-center">
+        <button onClick={handleAddNew} className="bg-blue-600 text-white px-4 py-2 rounded">+ Add New Item</button>
+        <button onClick={handleExport} className="bg-gray-700 text-white px-4 py-2 rounded">Export CSV</button>
+        <label className="cursor-pointer bg-indigo-600 text-white px-4 py-2 rounded">
+          Import CSV
+          <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={handleImport} />
+        </label>
       </div>
 
-      <div className="mb-4">
-        <button
-          onClick={() => {
-            resetForm();
-            setShowForm(true);
-          }}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          ➕ Add New Item
-        </button>
-      </div>
-
-      {showForm && (
-        <form className="bg-white p-4 rounded shadow mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[{ label: 'Name', val: name, set: setName },
-            { label: 'Category', val: category, set: setCategory },
-            { label: 'Subcategory', val: subcategory, set: setSubcategory },
-            { label: 'Brand', val: brand, set: setBrand },
-            { label: 'Model', val: model, set: setModel },
-            {
-              label: 'Quantity',
-              val: quantity.toString(),
-              set: (v: string) => setQuantity(parseInt(v) || 0),
-            },
-            { label: 'Unit', val: unit, set: setUnit },
-            { label: 'Location', val: itemLocation, set: setItemLocation },
-            { label: 'Condition', val: condition, set: setCondition },
-            { label: 'Notes', val: notes, set: setNotes },
-          ].map(({ label, val, set }, i) => (
-            <label key={i} className="block text-sm">
-              {label}
-              <input
-                value={val}
-                onChange={(e) => set(e.target.value)}
-                className="w-full mt-1 p-2 border border-gray-300 rounded"
-              />
-            </label>
-          ))}
-
-          <label className="block text-sm col-span-full">
-            Upload Photo:
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-            />
-          </label>
-
-          <div className="col-span-full">
-            <button
-              type="button"
-              onClick={handleSave}
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-            >
-              {selectedItem?.id ? 'Update Item' : 'Save Item'}
-            </button>
-          </div>
-        </form>
-      )}
-
-      <ul className="space-y-2">
-        {items.map((item, index) => (
-          <li
-            key={index}
-            className="p-3 border border-gray-200 rounded bg-white cursor-pointer hover:bg-gray-100"
-            onClick={() => handleItemClick(item)}
+      {/* Form */}
+      <div className="bg-white p-4 rounded shadow mb-6">
+        <div className="grid grid-cols-2 gap-4">
+          <input name="name" placeholder="Name" value={formData.name || ''} onChange={handleChange} className="border p-2 rounded w-full" />
+          <input name="category" placeholder="Category" value={formData.category || ''} onChange={handleChange} className="border p-2 rounded w-full" />
+          <input name="subcategory" placeholder="Subcategory" value={formData.subcategory || ''} onChange={handleChange} className="border p-2 rounded w-full" />
+          <input name="brand" placeholder="Brand" value={formData.brand || ''} onChange={handleChange} className="border p-2 rounded w-full" />
+          <input name="model" placeholder="Model" value={formData.model || ''} onChange={handleChange} className="border p-2 rounded w-full" />
+          <input name="quantity" placeholder="Quantity" value={formData.quantity || ''} onChange={handleChange} className="border p-2 rounded w-full" />
+          <input name="unit" placeholder="Unit" value={formData.unit || ''} onChange={handleChange} className="border p-2 rounded w-full" />
+          <input name="location" placeholder="Location" value={formData.location || ''} onChange={handleChange} className="border p-2 rounded w-full" />
+          <input name="condition" placeholder="Condition" value={formData.condition || ''} onChange={handleChange} className="border p-2 rounded w-full" />
+          <textarea name="notes" placeholder="Notes" value={formData.notes || ''} onChange={handleChange} className="border p-2 rounded w-full col-span-2" />
+          <div
+            ref={dropRef}
+            onDragOver={e => e.preventDefault()}
+            onDrop={handleDrop}
+            className="col-span-2 p-4 border-2 border-dashed border-gray-300 rounded text-center text-gray-500"
           >
-            <div className="font-bold">{item.name}</div>
-            <div className="text-sm text-gray-600">
-              {item.category} — {item.location}
-            </div>
-            {item.photo_ref && (
-              <img
-                src={getPublicUrl(item.photo_ref)}
-                alt={item.name}
-                className="mt-2 max-h-24"
-              />
-            )}
-          </li>
+            Drag & drop images here to upload
+          </div>
+        </div>
+        <button onClick={handleUpdate} className="mt-4 bg-green-600 text-white px-4 py-2 rounded">Update Item</button>
+      </div>
+
+      {/* Inventory List */}
+      <div className="space-y-4">
+        {items.map((item) => (
+          <div
+            key={item.id}
+            className="bg-white border rounded p-3 shadow cursor-pointer hover:bg-gray-100"
+            onClick={() => handleSelect(item)}
+          >
+            <div className="font-semibold">{item.name}</div>
+            <div className="text-sm text-gray-600">{item.category} — {item.subcategory}</div>
+            {item.photo_ref && item.photo_ref.split(',').map((url: string, idx: number) => (
+              <img key={idx} src={url} alt={item.name} className="mt-2 max-w-xs rounded" />
+            ))}
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
-};
-
-export default InventoryPage;
+}
