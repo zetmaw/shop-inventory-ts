@@ -1,8 +1,9 @@
+type Spec = { id: string; name: string; description: string; tags: string[]; [key: string]: any };
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 
 export function GuitarSpecManager() {
-  const [specs, setSpecs] = useState([]);
+  const [specs, setSpecs] = useState<Spec[]>([]);
   const [form, setForm] = useState({ name: '', description: '', tags: '' });
 
   useEffect(() => {

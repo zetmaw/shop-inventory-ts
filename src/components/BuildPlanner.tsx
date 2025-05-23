@@ -1,8 +1,9 @@
+type Spec = { id: string; name: string; [key: string]: any };
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 
 export function BuildPlanner() {
-  const [specs, setSpecs] = useState([]);
+  const [specs, setSpecs] = useState<Spec[]>([]);
   const [selectedSpec, setSelectedSpec] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState('');
@@ -28,16 +29,16 @@ export function BuildPlanner() {
     const { data: inventory } = await supabase.from('items').select('*');
     const prompt = `
 Build Request:
-- Guitar spec: ${spec.name}
-- Description: ${spec.description}
-- Tags: ${spec.tags.join(', ')}
+- Guitar spec: ${spec?.name}
+- Description: ${spec?.description}
+- Tags: ${spec?.tags.join(', ')}
 - Quantity: ${quantity}
 
 Inventory:
-${inventory.map(i => `- ${i.name} (${i.category})`).join('\n')}
+${inventory?.map(i => `- ${i.name} (${i.category})`).join('\n')}
 
 Task:
-Provide a CNC production strategy using the tools and stock listed above to efficiently build ${quantity} guitars from this spec.
+Provide a CNC production strategy using the tools and stock listed above to efficiently build ${quantity} guitars from this spec?.
 `;
     setOutputPrompt(prompt);
   }
@@ -48,7 +49,7 @@ Provide a CNC production strategy using the tools and stock listed above to effi
       <select value={selectedSpec} onChange={e => setSelectedSpec(e.target.value)} className="border p-2 w-full mb-2">
         <option value="">Select a guitar spec</option>
         {specs.map((spec: any) => (
-          <option key={spec.id} value={spec.id}>{spec.name}</option>
+          <option key={spec?.id} value={spec?.id}>{spec?.name}</option>
         ))}
       </select>
       <input type="number" value={quantity} onChange={e => setQuantity(parseInt(e.target.value))} className="border p-2 w-full mb-2" min={1} />
