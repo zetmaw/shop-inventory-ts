@@ -29,17 +29,70 @@ export default function InventoryPage() {
     setFormData((prev: any) => ({ ...prev, [name]: value }));
   }
 
-  async function handleUpdate() {
+  async function handleSave() {
+    const payload = { ...formData };
+
+    if ('quantity' in payload) {
+      const parsed = parseInt(payload.quantity, 10);
+      payload.quantity = isNaN(parsed) ? 0 : parsed;
+    }
+
+    let response;
+    if (selectedItem?.id) {
+      console.log('📝 Updating item:', selectedItem.id);
+      delete payload.id;
+      delete payload.created_at;
+
+      response = await supabase
+        .from('items')
+        .update(payload)
+        .eq('id', selectedItem.id)
+        .select()
+        .single();
+    } else {
+      console.log('🆕 Inserting new item');
+      response = await supabase
+        .from('items')
+        .insert(payload)
+        .select()
+        .single();
+    }
+
+    const { data, error } = response;
+
+    if (error) {
+      console.error('❌ Save failed:', error);
+      alert(`Save failed: ${error.message}`);
+    } else {
+      console.log('✅ Save successful:', data);
+      await loadInventory();
+      setSelectedItem(null);
+      setFormData({});
+    }
+  }
+
+  async function handleDelete() {
     if (!selectedItem) return;
-    const { error } = await supabase.from('items').update(formData).eq('id', selectedItem.id);
-    if (error) console.error('Failed to update item:', error);
-    else await loadInventory();
+    const confirmDelete = confirm(`Delete item "${selectedItem.name}"?`);
+    if (!confirmDelete) return;
+
+    const { error } = await supabase.from('items').delete().eq('id', selectedItem.id);
+    if (error) {
+      console.error('❌ Delete failed:', error);
+      alert(`Delete failed: ${error.message}`);
+    } else {
+      console.log('🗑️ Delete successful');
+      await loadInventory();
+      setSelectedItem(null);
+      setFormData({});
+    }
   }
 
   async function handleExport() {
     const csvContent = [
       [
-        'name','category','subcategory','brand','model','quantity','unit','location','condition','notes','photo_ref'
+        'name', 'category', 'subcategory', 'brand', 'model',
+        'quantity', 'unit', 'location', 'condition', 'notes', 'photo_ref'
       ],
       ...items.map(item => [
         item.name, item.category, item.subcategory, item.brand, item.model,
@@ -70,19 +123,6 @@ export default function InventoryPage() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   }
 
-  async function handleAddNew() {
-    const { data, error } = await supabase.from('items').insert({ name: 'New Item' }).select().single();
-    if (error) {
-      console.error('Error adding new item:', error);
-      return;
-    }
-    await loadInventory();
-    if (data) {
-      setSelectedItem(data);
-      setFormData(data);
-    }
-  }
-
   async function handlePhotoUpload(files: FileList) {
     if (!selectedItem) return;
     for (const file of Array.from(files)) {
@@ -110,9 +150,8 @@ export default function InventoryPage() {
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">🧰 Workshop Inventory</h1>
 
-      {/* Action Buttons */}
       <div className="flex gap-4 mb-4 items-center">
-        <button onClick={handleAddNew} className="bg-blue-600 text-white px-4 py-2 rounded">+ Add New Item</button>
+        <button onClick={() => { setFormData({}); setSelectedItem(null); }} className="bg-blue-600 text-white px-4 py-2 rounded">+ Add New Item</button>
         <button onClick={handleExport} className="bg-gray-700 text-white px-4 py-2 rounded">Export CSV</button>
         <label className="cursor-pointer bg-indigo-600 text-white px-4 py-2 rounded">
           Import CSV
@@ -120,7 +159,6 @@ export default function InventoryPage() {
         </label>
       </div>
 
-      {/* Form */}
       <div className="bg-white p-4 rounded shadow mb-6">
         <div className="grid grid-cols-2 gap-4">
           <input name="name" placeholder="Name" value={formData.name || ''} onChange={handleChange} className="border p-2 rounded w-full" />
@@ -142,10 +180,18 @@ export default function InventoryPage() {
             Drag & drop images here to upload
           </div>
         </div>
-        <button onClick={handleUpdate} className="mt-4 bg-green-600 text-white px-4 py-2 rounded">Update Item</button>
+        <div className="flex gap-4 mt-4">
+          <button onClick={handleSave} className="bg-green-600 text-white px-4 py-2 rounded">
+            {selectedItem?.id ? 'Update Item' : 'Save Item'}
+          </button>
+          {selectedItem?.id && (
+            <button onClick={handleDelete} className="bg-red-600 text-white px-4 py-2 rounded">
+              Delete Item
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Inventory List */}
       <div className="space-y-4">
         {items.map((item) => (
           <div

@@ -46,19 +46,19 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             </AuthGuard>
           }
         />
-        <Route
-          path="/planner"
-          element={
-            <AuthGuard>
-              <AppLayout>
-                <div className="space-y-6">
-                  <GuitarSpecManager />
-                  <BuildPlanner />
-                </div>
-              </AppLayout>
-            </AuthGuard>
-          }
-        />
+       <Route
+  path="/planner"
+  element={
+    <AuthGuard>
+      <AppLayout>
+        <div className="space-y-6">
+          <GuitarSpecManager />
+          <BuildPlanner />
+        </div>
+      </AppLayout>
+    </AuthGuard>
+  }
+/>
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

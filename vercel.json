@@ -1,5 +1,4 @@
 {
-  "devCommand": "pnpm dev",
   "buildCommand": "pnpm build",
   "rewrites": [
     { "source": "/(.*)", "destination": "/" }
