@@ -1,4 +1,3 @@
-export {}; // ensures this is treated as a module
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 
@@ -24,6 +23,8 @@ export function GuitarSpecManager() {
     if (!error && data) {
       const filtered = data.filter((spec) => spec.name?.trim());
       setSpecs(filtered);
+    } else {
+      console.error('Error loading specs:', error);
     }
   }
 
@@ -40,12 +41,16 @@ export function GuitarSpecManager() {
         await loadSpecs();
         setFormData({});
         setSelectedId(null);
+      } else {
+        console.error('Update failed:', error);
       }
     } else {
       const { error } = await supabase.from('guitar_specs').insert(payload);
       if (!error) {
         await loadSpecs();
         setFormData({});
+      } else {
+        console.error('Insert failed:', error);
       }
     }
   }
@@ -58,6 +63,8 @@ export function GuitarSpecManager() {
         setSelectedId(null);
         setFormData({});
       }
+    } else {
+      console.error('Delete failed:', error);
     }
   }
 
@@ -91,7 +98,15 @@ export function GuitarSpecManager() {
           className="border p-2 rounded"
           placeholder="Tags (comma separated)"
           value={formData.tags?.join(', ') || ''}
-          onChange={(e) => setFormData({ ...formData, tags: e.target.value.split(',').map(t => t.trim()) })}
+          onChange={(e) =>
+            setFormData({
+              ...formData,
+              tags: e.target.value
+                .split(',')
+                .map((tag) => tag.trim())
+                .filter((tag) => tag.length > 0),
+            })
+          }
         />
       </div>
       <button onClick={handleSave} className="bg-blue-600 text-white px-4 py-2 rounded mb-4">
@@ -124,7 +139,7 @@ export function GuitarSpecManager() {
                   e.stopPropagation();
                   handleDelete(spec.id);
                 }}
-                className="bg-red-500 text-white text-sm px-3 py-1 rounded"
+                className="bg-red-500 text-white text-xs px-3 py-1 rounded"
               >
                 Delete
               </button>

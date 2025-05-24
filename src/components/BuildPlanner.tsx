@@ -68,7 +68,7 @@ export function BuildPlanner() {
 
   return (
     <div className="p-4 border rounded-xl mb-6">
-      <h2 className="text-xl font-bold mb-4">🎸 Build Planner</h2>
+      <h2 className="text-xl font-bold mb-4">🎸 Guitar Spec Manager</h2>
 
       <div className="grid grid-cols-2 gap-4 mb-4">
         <input
