@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 
+const API_BASE_URL = 'https://shop-inventory-ts.vercel.app/api'; // Replace with your actual Vercel deployment URL if different
+
 export default function AdminPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -15,7 +17,7 @@ export default function AdminPage() {
     setLoadingUsers(true);
     setErrorMsg('');
     try {
-      const res = await fetch('/api/list-users');
+      const res = await fetch(`${API_BASE_URL}/list-users`);
       const json = await res.json();
       if (res.ok) {
         setUsers(json.users || []);
@@ -32,7 +34,7 @@ export default function AdminPage() {
   }
 
   async function handleAddUser() {
-    const res = await fetch('/api/create-user', {
+    const res = await fetch(`${API_BASE_URL}/create-user`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
@@ -50,7 +52,7 @@ export default function AdminPage() {
   async function handleResetPassword(userId: string) {
     const user = users.find(u => u.id === userId);
     if (!user?.email) return;
-    const res = await fetch('/api/reset-password', {
+    const res = await fetch(`${API_BASE_URL}/reset-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: user.email })
@@ -62,7 +64,7 @@ export default function AdminPage() {
 
   async function handleDeleteUser(userId: string) {
     if (!confirm('Are you sure you want to permanently delete this user?')) return;
-    const res = await fetch('/api/delete-user', {
+    const res = await fetch(`${API_BASE_URL}/delete-user`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId })
