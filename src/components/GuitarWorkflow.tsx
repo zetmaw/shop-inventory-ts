@@ -67,24 +67,26 @@ export default function GuitarWorkflow() {
   };
 
   return (
-    <Card className="p-4 max-w-xl mx-auto">
-      <CardContent>
-        <h2 className="text-xl font-bold mb-4">🎸 Guitar Build Workflow</h2>
-        <h3 className="text-lg font-medium mb-2">Step {step + 1}: {steps[step].label}</h3>
-        <div className="mb-4">{steps[step].content}</div>
-        <div className="flex gap-2">
-          <Button disabled={step === 0} onClick={handleBack} variant="outline">
-            Back
-          </Button>
-          <Button onClick={handleNext}>{step === steps.length - 1 ? 'Finish' : 'Next'}</Button>
-        </div>
-        {summary && (
-          <div className="mt-6 p-3 border rounded bg-green-50">
-            <p className="font-semibold">✅ Build saved:</p>
-            <p>{summary}</p>
+    <div className="p-6 max-w-3xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">🎸 Guitar Build Workflow</h1>
+      <Card className="p-4">
+        <CardContent>
+          <h3 className="text-lg font-medium mb-2">Step {step + 1}: {steps[step].label}</h3>
+          <div className="mb-4">{steps[step].content}</div>
+          <div className="flex gap-2">
+            <Button disabled={step === 0} onClick={handleBack} variant="outline">
+              Back
+            </Button>
+            <Button onClick={handleNext}>{step === steps.length - 1 ? 'Finish' : 'Next'}</Button>
           </div>
-        )}
-      </CardContent>
-    </Card>
+          {summary && (
+            <div className="mt-6 p-3 border rounded bg-green-50">
+              <p className="font-semibold">✅ Build saved:</p>
+              <p>{summary}</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

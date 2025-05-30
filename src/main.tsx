@@ -10,6 +10,7 @@ import AuthGuard from './components/AuthGuard';
 import { Navbar } from './components/Navbar';
 import { GuitarSpecManager } from './components/GuitarSpecManager';
 import { BuildPlanner } from './components/BuildPlanner';
+import GuitarWorkflow from './components/GuitarWorkflow'; // ✅ Add this line
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -46,19 +47,29 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             </AuthGuard>
           }
         />
-       <Route
-  path="/planner"
-  element={
-    <AuthGuard>
-      <AppLayout>
-        <div className="space-y-6">
-          <GuitarSpecManager />
-          <BuildPlanner />
-        </div>
-      </AppLayout>
-    </AuthGuard>
-  }
-/>
+        <Route
+          path="/planner"
+          element={
+            <AuthGuard>
+              <AppLayout>
+                <div className="space-y-6">
+                  <GuitarSpecManager />
+                  <BuildPlanner />
+                </div>
+              </AppLayout>
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/workflow"
+          element={
+            <AuthGuard>
+              <AppLayout>
+                <GuitarWorkflow />
+              </AppLayout>
+            </AuthGuard>
+          }
+        />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

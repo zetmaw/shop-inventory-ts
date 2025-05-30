@@ -13,6 +13,7 @@ export function Navbar() {
       <Link to="/admin" className={linkStyle('/admin')}>Admin</Link>
       <Link to="/inventory" className={linkStyle('/inventory')}>Inventory</Link>
       <Link to="/planner" className={linkStyle('/planner')}>Guitar Planner</Link>
+      <Link to="/workflow" className="hover:underline">Workflow</Link>
       <div className="flex-grow" />
       <Link to="/login" className="text-red-600 hover:underline">Log Out</Link>
     </nav>
